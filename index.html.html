@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>西安地铁十号线春季漫游系统 - 春日踏青季，地铁伴你行</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f8fdf8;
+            color: #2c5530;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #a8e6a3 0%, #6b9e5f 100%);
+            color: white;
+            padding: 25px 0;
+            text-align: center;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 12px rgba(107, 158, 95, 0.15);
+            margin-bottom: 30px;
+        }
+        
+        .header-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .subtitle {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            font-weight: 300;
+        }
+        
+        .theme-line {
+            font-size: 1.1rem;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        #map-container {
+            flex: 1;
+            min-width: 300px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 6px 18px rgba(107, 158, 95, 0.2);
+            height: 600px;
+        }
+        
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .sidebar {
+            flex: 1;
+            min-width: 300px;
+            background-color: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 6px 18px rgba(107, 158, 95, 0.15);
+            overflow-y: auto;
+            max-height: 600px;
+        }
+        
+        .section-title {
+            color: #4a7c59;
+            border-bottom: 2px solid #c5e1a5;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            color: #81c784;
+        }
+        
+        .attraction-list {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        
+        .attraction-item {
+            background-color: #f1f8e9;
+            border-radius: 12px;
+            padding: 18px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 5px solid #a8e6a3;
+        }
+        
+        .attraction-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(168, 230, 163, 0.3);
+            background-color: #e8f5e9;
+        }
+        
+        .attraction-item.active {
+            background-color: #e8f5e9;
+            border-left-color: #4caf50;
+            box-shadow: 0 5px 12px rgba(76, 175, 80, 0.2);
+        }
+        
+        .attraction-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2e7d32;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .attraction-period {
+            display: inline-block;
+            background-color: #c5e1a5;
+            color: #33691e;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+        
+        .attraction-description {
+            color: #555;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+        }
+        
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .tag {
+            background-color: #e8f5e9;
+            color: #4a7c59;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            border: 1px solid #c5e1a5;
+        }
+        
+        .timeline-section {
+            background-color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 6px 18px rgba(107, 158, 95, 0.15);
+        }
+        
+        .timeline {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            position: relative;
+            margin-top: 20px;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 30px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(to right, #a8e6a3, #6b9e5f);
+            border-radius: 2px;
+        }
+        
+        .timeline-item {
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+            position: relative;
+            padding-top: 40px;
+        }
+        
+        .timeline-marker {
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border: 4px solid #6b9e5f;
+            border-radius: 50%;
+            position: absolute;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+        }
+        
+        .timeline-date {
+            font-weight: 600;
+            color: #2e7d32;
+            margin-bottom: 5px;
+        }
+        
+        .timeline-title {
+            font-size: 0.9rem;
+            color: #555;
+            padding: 0 5px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 25px;
+            color: #4a7c59;
+            font-size: 0.95rem;
+            border-top: 1px solid #dcedc8;
+            margin-top: 30px;
+        }
+        
+        .logo-section {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .logo {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #4a7c59;
+            padding: 8px 15px;
+            background-color: #f1f8e9;
+            border-radius: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .subtitle {
+                font-size: 1.1rem;
+            }
+            
+            #map-container, .sidebar {
+                min-width: 100%;
+            }
+            
+            .timeline-item {
+                min-width: 100px;
+            }
+        }
+        
+        .leaflet-popup-content {
+            color: #2c5530;
+            font-size: 0.95rem;
+        }
+        
+        .leaflet-popup-content-wrapper {
+            border-radius: 10px;
+            border-left: 5px solid #81c784;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>春日踏青季，地铁伴你行</h1>
+            <div class="subtitle">西安欧亚学院 & 西安气象 & 西安地铁联合策划</div>
+            <div class="theme-line">十号线踏青旅程：从初春到春末的旅行景点叙事</div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="timeline-section">
+            <h2 class="section-title"><i class="fas fa-calendar-alt"></i> 活动时间线</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-date">1月底-2月中</div>
+                    <div class="timeline-title">春节年味重，线上"云"新年</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-date">3月</div>
+                    <div class="timeline-title">早春氛围浓，乘十号线追春意</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-date">4月</div>
+                    <div class="timeline-title">春回大地，搭乘地铁寻春迹</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div id="map-container">
+                <div id="map"></div>
+            </div>
+            
+            <div class="sidebar">
+                <h2 class="section-title"><i class="fas fa-map-marker-alt"></i> 地铁十号线打卡景点</h2>
+                <div class="attraction-list">
+                    <div class="attraction-item active" data-id="1">
+                        <div class="attraction-name">
+                            <i class="fas fa-landmark"></i> 昭慧广场
+                        </div>
+                        <span class="attraction-period">1月底-2月中（新年）</span>
+                        <div class="attraction-description">
+                            春节期间有集市和秦腔表演，体验地道浓情的年味精彩盛会。推荐拍摄集会场景、秦腔表演与非遗文化的照片，在线上感受高陵过年氛围。
+                        </div>
+                        <div class="tags">
+                            <span class="tag">春节集市</span>
+                            <span class="tag">秦腔表演</span>
+                            <span class="tag">非遗文化</span>
+                            <span class="tag">年味体验</span>
+                        </div>
+                    </div>
+                    
+                    <div class="attraction-item" data-id="2">
+                        <div class="attraction-name">
+                            <i class="fas fa-tree"></i> 浐灞湿地公园
+                        </div>
+                        <span class="attraction-period">3月（早春踏青）</span>
+                        <div class="attraction-description">
+                            以"景+食"为两条主线，突出春日限定氛围感。打造"春日诗意打卡地"，设置"折柳寄春"打卡牌，推出"春日生态科普游"和"春日寻味地图"。
+                        </div>
+                        <div class="tags">
+                            <span class="tag">湿地生态</span>
+                            <span class="tag">折柳寄春</span>
+                            <span class="tag">春日美食</span>
+                            <span class="tag">亲子研学</span>
+                        </div>
+                    </div>
+                    
+                    <div class="attraction-item" data-id="3">
+                        <div class="attraction-name">
+                            <i class="fas fa-umbrella-beach"></i> 未央湖公园
+                        </div>
+                        <span class="attraction-period">4月（赏花遛鸟季）</span>
+                        <div class="attraction-description">
+                            "地铁直达的春日欢乐场"，以"春景打卡+趣味玩法+舌尖鲜味"为核心，打造"看得见、玩得着、吃得香"的沉浸式踏青体验，吸引亲子、情侣、年轻群体一站式春游。
+                        </div>
+                        <div class="tags">
+                            <span class="tag">花海湖景</span>
+                            <span class="tag">春日住宿</span>
+                            <span class="tag">湖畔美食</span>
+                            <span class="tag">亲子游乐</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <h2 class="section-title" style="margin-top: 30px;"><i class="fas fa-bullhorn"></i> 互动活动</h2>
+                <div class="attraction-item" style="background-color: #e3f2fd; border-left-color: #64b5f6;">
+                    <div class="attraction-name">
+                        <i class="fas fa-hashtag"></i> #10号线寻春踏青时刻
+                    </div>
+                    <div class="attraction-description">
+                        图文征集活动：鼓励网友上传在十号线沿线拍摄的春天照片、视频、暖心文字等，点赞数较高者可以纳入媒体账号精选集，并有机会获得精美礼品。
+                    </div>
+                    <div class="tags">
+                        <span class="tag" style="background-color: #bbdefb;">用户参与</span>
+                        <span class="tag" style="background-color: #bbdefb;">内容征集</span>
+                        <span class="tag" style="background-color: #bbdefb;">社交媒体</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>预期效果：</strong>视频播放量达到1w+，被两个及以上正规媒体转载，实现破圈效益。宣传十号线沿线美景，用影像记录西安春季季节变迁，为十号线范围内景区吸引客流量。</p>
+            <p>成为首个将地铁与景区联合宣传的文化融合案例。</p>
+            
+            <div class="logo-section">
+                <div class="logo">西安欧亚学院</div>
+                <div class="logo">西安气象</div>
+                <div class="logo">西安地铁</div>
+            </div>
+            
+            <p style="margin-top: 20px; font-size: 0.85rem; color: #888;">© 2026 春日踏青季策划方案 | 基于开源地图的春季漫游系统</p>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 初始化地图
+        const map = L.map('map').setView([34.35, 108.95], 11);
+        
+        // 添加开源地图图层（使用环保清新色调的OSM地图）
+        L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a>',
+            opacity: 0.9
+        }).addTo(map);
+        
+        // 自定义绿色图标
+        const greenIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: '<div style="background-color:#81c784; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; color:white; font-size:16px; border:3px solid white; box-shadow:0 0 10px rgba(0,0,0,0.2);"><i class="fas fa-map-marker-alt"></i></div>',
+            iconSize: [30, 30],
+            iconAnchor: [15, 30],
+            popupAnchor: [0, -30]
+        });
+        
+        // 景点数据
+        const attractions = [
+            {
+                id: 1,
+                name: "昭慧广场",
+                position: [34.53, 109.08],
+                period: "1月底-2月中（新年）",
+                description: "春节期间有集市和秦腔表演，体验地道浓情的年味精彩盛会。拍摄集会场景、秦腔表演与非遗文化的照片，在线上感受高陵过年氛围。",
+                tags: ["春节集市", "秦腔表演", "非遗文化", "年味体验"],
+                iconColor: "#FF9800"
+            },
+            {
+                id: 2,
+                name: "浐灞湿地公园",
+                position: [34.40, 109.05],
+                period: "3月（早春踏青）",
+                description: "以'景+食'为两条主线，突出春日限定氛围感。打造'春日诗意打卡地'，设置'折柳寄春'打卡牌，推出'春日生态科普游'和'春日寻味地图'。",
+                tags: ["湿地生态", "折柳寄春", "春日美食", "亲子研学"],
+                iconColor: "#4CAF50"
+            },
+            {
+                id: 3,
+                name: "未央湖公园",
+                position: [34.38, 108.98],
+                period: "4月（赏花遛鸟季）",
+                description: "'地铁直达的春日欢乐场'，以'春景打卡+趣味玩法+舌尖鲜味'为核心，打造'看得见、玩得着、吃得香'的沉浸式踏青体验。",
+                tags: ["花海湖景", "春日住宿", "湖畔美食", "亲子游乐"],
+                iconColor: "#2196F3"
+            }
+        ];
+        
+        // 地铁线路坐标（简化版，仅显示大致走向）
+        const metroLineCoordinates = [
+            [34.53, 109.08], // 昭慧广场附近
+            [34.48, 109.06], // 中间点1
+            [34.43, 109.04], // 中间点2
+            [34.40, 109.05], // 浐灞湿地公园附近
+            [34.38, 109.02], // 中间点3
+            [34.38, 108.98]  // 未央湖公园附近
+        ];
+        
+        // 添加地铁线路
+        const metroLine = L.polyline(metroLineCoordinates, {
+            color: '#4CAF50',
+            weight: 5,
+            opacity: 0.7,
+            dashArray: '10, 10'
+        }).addTo(map);
+        
+        // 添加车站标记
+        metroLineCoordinates.forEach((coord, index) => {
+            if (index === 0 || index === 3 || index === 5) {
+                // 只在景点位置添加车站标记
+                L.circleMarker(coord, {
+                    radius: 8,
+                    fillColor: '#4CAF50',
+                    color: '#fff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.9
+                }).addTo(map).bindTooltip(`地铁十号线车站 ${index+1}`, {direction: 'top'});
+            }
+        });
+        
+        // 添加景点标记
+        const markers = [];
+        attractions.forEach(attraction => {
+            const marker = L.marker(attraction.position, { icon: greenIcon })
+                .addTo(map)
+                .bindPopup(`
+                    <div style="font-weight:bold; color:#2e7d32; font-size:1.1rem; margin-bottom:8px;">
+                        <i class="fas fa-map-pin"></i> ${attraction.name}
+                    </div>
+                    <div style="color:#4a7c59; margin-bottom:5px; font-size:0.9rem;">
+                        <i class="fas fa-calendar"></i> ${attraction.period}
+                    </div>
+                    <div style="margin-bottom:10px;">${attraction.description}</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:5px;">
+                        ${attraction.tags.map(tag => `<span style="background-color:#e8f5e9; color:#4a7c59; padding:3px 8px; border-radius:12px; font-size:0.8rem;">${tag}</span>`).join('')}
+                    </div>
+                `);
+            
+            markers.push({id: attraction.id, marker: marker});
+        });
+        
+        // 景点点击交互
+        document.querySelectorAll('.attraction-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const id = parseInt(this.getAttribute('data-id'));
+                
+                // 更新活动项样式
+                document.querySelectorAll('.attraction-item').forEach(el => {
+                    el.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // 找到对应的标记并打开弹窗
+                const markerObj = markers.find(m => m.id === id);
+                if (markerObj) {
+                    map.setView(markerObj.marker.getLatLng(), 13);
+                    markerObj.marker.openPopup();
+                }
+            });
+        });
+        
+        // 初始时打开第一个景点的弹窗
+        if (markers.length > 0) {
+            setTimeout(() => {
+                map.setView(attractions[0].position, 12);
+                markers[0].marker.openPopup();
+            }, 500);
+        }
+        
+        // 添加地图控件
+        L.control.scale({position: 'bottomleft', imperial: false}).addTo(map);
+        
+        // 添加图例
+        const legend = L.control({position: 'bottomright'});
+        legend.onAdd = function() {
+            const div = L.DomUtil.create('div', 'info legend');
+            div.style.backgroundColor = 'white';
+            div.style.padding = '10px';
+            div.style.borderRadius = '5px';
+            div.style.boxShadow = '0 0 10px rgba(0,0,0,0.1)';
+            div.innerHTML = `
+                <h4 style="margin-top:0; color:#2e7d32;">图例</h4>
+                <div style="display:flex; align-items:center; margin-bottom:5px;">
+                    <div style="width:20px; height:20px; background-color:#4CAF50; border-radius:50%; margin-right:8px;"></div>
+                    <span>地铁十号线</span>
+                </div>
+                <div style="display:flex; align-items:center; margin-bottom:5px;">
+                    <div style="width:20px; height:20px; background-color:#81c784; border-radius:50%; margin-right:8px; display:flex; align-items:center; justify-content:center; color:white; font-size:12px;"><i class="fas fa-map-marker-alt"></i></div>
+                    <span>打卡景点</span>
+                </div>
+                <div style="display:flex; align-items:center;">
+                    <div style="width:15px; height:15px; background-color:#4CAF50; border-radius:50%; margin-right:8px; border:2px solid white;"></div>
+                    <span>地铁车站</span>
+                </div>
+            `;
+            return div;
+        };
+        legend.addTo(map);
+    </script>
+</body>
+</html>
